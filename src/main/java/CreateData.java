@@ -9,14 +9,13 @@ import java.util.Random;
 import java.util.ArrayList;
 
 public class CreateData {
-    public static void main(String[] args) {
+    public static void createLinkBookPage() {
         File data = new File("LinkBookPage.csv");
         Random rand = new Random();
 
         ArrayList<String> namesList = convertCSVtoArrayList("names.csv");
         ArrayList<String> occupationList = convertCSVtoArrayList("jobs.csv");
         ArrayList<String> educationList = convertCSVtoArrayList("education.csv");
-
 
 
         try (PrintWriter writer = new PrintWriter(new FileWriter(data))) {
@@ -47,25 +46,67 @@ public class CreateData {
         }
     }
 
-    public static ArrayList<String> convertCSVtoArrayList(String filePath){
-        String line = "";
-        String delimiter = ",";
-        ArrayList<String> words = new ArrayList<>();
+    public static void createAssociates(){
+        File data = new File("Associates.csv");
+        Random rand = new Random();
 
-        try (BufferedReader br = new BufferedReader(new FileReader(filePath))) {
-            // Iterate through the file line by line
-            while ((line = br.readLine()) != null) {
-                String[] word = line.split(delimiter); //split at comma
-                words.addAll(Arrays.asList(word));
-            }
+        ArrayList<String[]> namesList = convertCSVtoArrayArrayList("LinkBookPage.csv");
+        ArrayList<String[]> associations = new ArrayList<>();
+        ArrayList<ArrayList<Integer>> listOfAssociations = new ArrayList<>();
+
+        for(int i=0; i<200000; i++){
+            listOfAssociations.add(new ArrayList<>());
         }
-        catch (IOException e) {
+
+        try (PrintWriter writer = new PrintWriter(new FileWriter(data))) {
+            //writer.println("ColRel,ID1,ID2,DateOfRelation,Desc");
+
+            int i=1;
+            for(int j=0; j<namesList.size(); j++){
+                for(int k=0; k<100; k++){
+                    int ColRel = i;
+                    int ID1 = Integer.parseInt(namesList.get(j)[0]);
+                    int ID2 = rand.nextInt(namesList.size()+1);
+                    while(true){
+                        if(ID2==ID1)
+                            ID2 = rand.nextInt(namesList.size()+1);
+                        else{
+                            //need ID1-1 to get index in arraylist
+                            //this is checking for duplicates relations of 1 to 2
+                            ArrayList<Integer> ID1Associations = listOfAssociations.get(ID1-1);
+                            for (Integer id1Association : ID1Associations) {
+                                if (id1Association == ID2)
+                                    ID2 = rand.nextInt(namesList.size() + 1);
+                            }
+
+                            //this is checking for duplicate associations of 2 to 1 to make sure its symmetric
+                            ArrayList<Integer> ID2Associations = listOfAssociations.get(ID2-1);
+                            for (Integer id2Association : ID2Associations) {
+                                if (id2Association == ID1)
+                                    ID2 = rand.nextInt(namesList.size() + 1);
+                            }
+                            break;
+                        }
+                    }
+                    listOfAssociations.get(ID1).add(ID2);
+                    int DateOfRelation = rand.nextInt(50) + 1;;
+                    String Desc = "";
+
+                    //writing it to csv and add to arraylist
+                    String[] association = {Integer.toString(ColRel), Integer.toString(ID1), Integer.toString(ID2), Integer.toString(DateOfRelation), Desc};
+                    associations.add(association);
+                    writer.println(ColRel + "," + ID1 + "," + ID2 + "," + DateOfRelation + "," + Desc);
+                    i++;
+                }
+
+
+            }
+            System.out.println("CSV file written successfully.");
+        } catch (IOException e) {
+            System.out.println("An error occurred while writing the CSV file.");
             e.printStackTrace();
         }
-        return words;
     }
-
-
 
     public static void createAccessLogs() {
         File accessLogs = new File("accessLogs.csv");
@@ -95,5 +136,49 @@ public class CreateData {
             System.out.println("An error occurred while writing the CSV file.");
             e.printStackTrace();
         }
+    }
+
+    public static ArrayList<String[]> convertCSVtoArrayArrayList(String filePath){
+        String line = "";
+        String delimiter = ",";
+        ArrayList<String[]> words = new ArrayList<>();
+
+        try (BufferedReader br = new BufferedReader(new FileReader(filePath))) {
+            // Iterate through the file line by line
+            while ((line = br.readLine()) != null) {
+                String[] word = line.split(delimiter); //split at comma
+                words.add(word);
+            }
+        }
+        catch (IOException e) {
+            e.printStackTrace();
+        }
+        return words;
+    }
+
+    public static ArrayList<String> convertCSVtoArrayList(String filePath){
+        String line = "";
+        String delimiter = ",";
+        ArrayList<String> words = new ArrayList<>();
+
+        try (BufferedReader br = new BufferedReader(new FileReader(filePath))) {
+            // Iterate through the file line by line
+            while ((line = br.readLine()) != null) {
+                String[] word = line.split(delimiter); //split at comma
+                words.addAll(Arrays.asList(word));
+            }
+        }
+        catch (IOException e) {
+            e.printStackTrace();
+        }
+        return words;
+    }
+
+
+
+    public static void main(String[] args) {
+        //createLinkBookPage();
+        //createAssociates();
+        //createAccessLogs();
     }
 }
