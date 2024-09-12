@@ -8,3 +8,6 @@ education = [GenEdDevelopment, HighSchool, AssociatesDegree, BachelorsDegree, Ma
 
 description = [Family, CollegeFriend, Colleague, Acquaintance, Classmate, SignificantOther, HighSchoolFriend, FamilyFriend, Coworker, Neighbor, MiddleSchoolFriend, OnlineFriend, HobbyFriend, SportsFriend, Lover, FriendOfAFriend, MetOnceAndWillNeverSeeAgain]
 
+
+typeOfAccess = [viewed, leftANote, addedFriend, likedAPost, sharedAPost, commentedOnAPost, sentToAFriend, unaddedFriend, sentAPost, Screenshotted, checkFollowers, blocked, messaged]
+
