@@ -64,4 +64,36 @@ public class CreateData {
         }
         return words;
     }
+
+
+
+    public static void createAccessLogs() {
+        File accessLogs = new File("accessLogs.csv");
+        Random rand = new Random();
+        ArrayList<String> typeOfAccessList = convertCSVtoArrayList("typeOfAccess.csv");
+        try (PrintWriter writer = new PrintWriter(new FileWriter(accessLogs))) {
+            writer.println("AccessID,ByWho,WhatPage,TypeOfAccess,AccesTime");
+
+            int numAccess = typeOfAccessList.size();
+
+            for(int i=1; i<=100; i++){
+                int id = i;
+                int byWho = rand.nextInt(200000) + 1;
+                int whatPage = rand.nextInt(200000) + 1;
+                String typeOfAccess = typeOfAccessList.get(rand.nextInt(numAccess));;
+                int AccessTime = rand.nextInt(1000000) + 1;
+                if(byWho==whatPage)
+                    if (byWho != 200000)
+                        whatPage = byWho + 1;
+                    else
+                        whatPage = byWho - 1;
+                writer.println(id + "," + byWho + "," + whatPage + "," + typeOfAccess + "," + AccessTime);
+
+            }
+            System.out.println("CSV file written successfully.");
+        } catch (IOException e) {
+            System.out.println("An error occurred while writing the CSV file.");
+            e.printStackTrace();
+        }
+    }
 }
