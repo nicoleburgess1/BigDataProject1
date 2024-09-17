@@ -21,9 +21,17 @@ public class WordCount {
 
         public void map(Object key, Text value, Context context
         ) throws IOException, InterruptedException {
-            StringTokenizer itr = new StringTokenizer(value.toString());
-            while (itr.hasMoreTokens()) {
-                word.set(itr.nextToken());
+            //StringTokenizer itr = new StringTokenizer(value.toString());
+            String dataset = value.toString();
+            String[] datapoint = dataset.split("/n");
+            String[][] columns = new String[datapoint.length][];
+            for(int i = 0; i < columns.length; i++){
+                columns[i] = datapoint[i].split(",");
+            }
+
+
+            for (String[] column : columns) {
+                word.set(column[0]);
                 context.write(word, one);
             }
         }
