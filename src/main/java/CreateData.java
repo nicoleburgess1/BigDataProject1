@@ -11,7 +11,7 @@ import java.util.ArrayList;
 public class CreateData {
     public static void createLinkBookPage() {
         File data = new File("LinkBookPage.csv");
-        Random rand = new Random(35434523);
+        Random rand = new Random();
 
         ArrayList<String> namesList = convertCSVtoArrayList("names.csv");
         ArrayList<String> occupationList = convertCSVtoArrayList("jobs.csv");
@@ -48,7 +48,7 @@ public class CreateData {
 
     public static void createAssociates(){
         File data = new File("Associates.csv");
-        Random rand = new Random();
+        Random rand = new Random(35434523);
 
         ArrayList<String[]> namesList = convertCSVtoArrayArrayList("LinkBookPage.csv");
         ArrayList<String> descList = convertCSVtoArrayList("description.csv");
