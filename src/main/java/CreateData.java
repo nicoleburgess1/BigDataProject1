@@ -11,7 +11,7 @@ import java.util.ArrayList;
 public class CreateData {
     public static void createLinkBookPage() {
         File data = new File("LinkBookPage.csv");
-        Random rand = new Random();
+        Random rand = new Random(35434523);
 
         ArrayList<String> namesList = convertCSVtoArrayList("names.csv");
         ArrayList<String> occupationList = convertCSVtoArrayList("jobs.csv");
@@ -19,7 +19,7 @@ public class CreateData {
 
 
         try (PrintWriter writer = new PrintWriter(new FileWriter(data))) {
-            writer.println("ID,Nickname,Occupation,NCode,HighestEdu");
+            //writer.println("ID,Nickname,Occupation,NCode,HighestEdu");
 
             int namesIndex = 0;
             int numNames = namesList.size();
@@ -31,7 +31,7 @@ public class CreateData {
                 int id = i;
                 String nickname = namesList.get(namesIndex);
                 String occupation = occupationList.get(rand.nextInt(numOccupations));
-                int nCode = rand.nextInt(50) + 1;;
+                int nCode = rand.nextInt(50) + 1;
                 String highestEdu = educationList.get(rand.nextInt(numEducations));
                 writer.println(id + "," + nickname + "," + occupation + "," + nCode + "," + highestEdu);
                 if(namesIndex==numNames-1)
@@ -51,7 +51,7 @@ public class CreateData {
         Random rand = new Random();
 
         ArrayList<String[]> namesList = convertCSVtoArrayArrayList("LinkBookPage.csv");
-        ArrayList<String[]> associations = new ArrayList<>();
+        ArrayList<String> descList = convertCSVtoArrayList("description.csv");
         ArrayList<ArrayList<Integer>> listOfAssociations = new ArrayList<>();
 
         for(int i=0; i<200000; i++){
@@ -66,35 +66,34 @@ public class CreateData {
                 for(int k=0; k<100; k++){
                     int ColRel = i;
                     int ID1 = Integer.parseInt(namesList.get(j)[0]);
-                    int ID2 = rand.nextInt(namesList.size()+1);
+                    int ID2 = rand.nextInt(namesList.size())+1;
                     while(true){
                         if(ID2==ID1)
-                            ID2 = rand.nextInt(namesList.size()+1);
+                            ID2 = rand.nextInt(namesList.size())+1;
                         else{
                             //need ID1-1 to get index in arraylist
                             //this is checking for duplicates relations of 1 to 2
                             ArrayList<Integer> ID1Associations = listOfAssociations.get(ID1-1);
                             for (Integer id1Association : ID1Associations) {
                                 if (id1Association == ID2)
-                                    ID2 = rand.nextInt(namesList.size() + 1);
+                                    ID2 = rand.nextInt(namesList.size())+1;
                             }
 
                             //this is checking for duplicate associations of 2 to 1 to make sure its symmetric
                             ArrayList<Integer> ID2Associations = listOfAssociations.get(ID2-1);
                             for (Integer id2Association : ID2Associations) {
                                 if (id2Association == ID1)
-                                    ID2 = rand.nextInt(namesList.size() + 1);
+                                    ID2 = rand.nextInt(namesList.size())+1;
                             }
                             break;
                         }
                     }
-                    listOfAssociations.get(ID1).add(ID2);
-                    int DateOfRelation = rand.nextInt(50) + 1;;
-                    String Desc = "";
+                    listOfAssociations.get(ID1-1).add(ID2);
+                    int DateOfRelation = rand.nextInt(50) + 1;
+                    String Desc = descList.get(rand.nextInt(descList.size()));
 
                     //writing it to csv and add to arraylist
-                    String[] association = {Integer.toString(ColRel), Integer.toString(ID1), Integer.toString(ID2), Integer.toString(DateOfRelation), Desc};
-                    associations.add(association);
+                    //String[] association = {Integer.toString(ColRel), Integer.toString(ID1), Integer.toString(ID2), Integer.toString(DateOfRelation), Desc};
                     writer.println(ColRel + "," + ID1 + "," + ID2 + "," + DateOfRelation + "," + Desc);
                     i++;
                 }
@@ -113,15 +112,15 @@ public class CreateData {
         Random rand = new Random();
         ArrayList<String> typeOfAccessList = convertCSVtoArrayList("typeOfAccess.csv");
         try (PrintWriter writer = new PrintWriter(new FileWriter(accessLogs))) {
-            writer.println("AccessID,ByWho,WhatPage,TypeOfAccess,AccesTime");
+            //writer.println("AccessID,ByWho,WhatPage,TypeOfAccess,AccessTime");
 
             int numAccess = typeOfAccessList.size();
 
-            for(int i=1; i<=100; i++){
+            for(int i=1; i<=1000000; i++){
                 int id = i;
                 int byWho = rand.nextInt(200000) + 1;
                 int whatPage = rand.nextInt(200000) + 1;
-                String typeOfAccess = typeOfAccessList.get(rand.nextInt(numAccess));;
+                String typeOfAccess = typeOfAccessList.get(rand.nextInt(numAccess));
                 int AccessTime = rand.nextInt(1000000) + 1;
                 if(byWho==whatPage)
                     if (byWho != 200000)
@@ -178,7 +177,7 @@ public class CreateData {
 
     public static void main(String[] args) {
         //createLinkBookPage();
-        //createAssociates();
+        createAssociates();
         //createAccessLogs();
     }
 }
