@@ -69,7 +69,7 @@ public class WordCount {
         job.setOutputKeyClass(Text.class);
         job.setOutputValueClass(IntWritable.class);
         FileInputFormat.addInputPath(job, new Path("/Users/nicoleburgess/CS/Grad Year/CS585/Project-0/data.txt"));
-        FileOutputFormat.setOutputPath(job, new Path("/Users/nicoleburgess/CS/Grad Year/CS585/Project-0/output"));
+        FileOutputFormat.setOutputPath(job, new Path("/Users/nicoleburgess/CS/Grad Year/CS585/Project-0/output1"));
         System.exit(job.waitForCompletion(true) ? 0 : 1);
     }
 }
