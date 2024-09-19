@@ -1,6 +1,3 @@
-import java.io.IOException;
-import java.util.StringTokenizer;
-
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IntWritable;
@@ -11,7 +8,9 @@ import org.apache.hadoop.mapreduce.Reducer;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 
-public class WordCount {
+import java.io.IOException;
+
+public class TaskB {
 
     public static class TokenizerMapper
             extends Mapper<Object, Text, Text, IntWritable>{
@@ -31,7 +30,7 @@ public class WordCount {
 
 
             for (String[] column : columns) {
-                word.set(column[0]);
+                word.set(column[2]);
                 context.write(word, one);
             }
         }
@@ -53,13 +52,46 @@ public class WordCount {
         }
     }
 
+
+    public static class SortMapper
+            extends Mapper<Text, IntWritable, Text, IntWritable> {
+
+        private final static IntWritable one = new IntWritable(1);
+        private Text word = new Text();
+
+
+        public void map(Text key, IntWritable value, Mapper.Context context
+        ) throws IOException, InterruptedException {
+
+            String dataset = value.toString();
+            String[] datapoint = dataset.split("/n");
+            String[][] columns = new String[datapoint.length][];
+            for (int i = 0; i < columns.length; i++) {
+                columns[i] = datapoint[i].split(",");
+            }
+
+            for (String[] column : columns) {
+                word.set(column[1]);
+                context.write(word, column[0]);
+            }
+
+        }
+    }
+
+
+
+
+
     public void debug(String[] args) throws Exception {
         Configuration conf = new Configuration();
         Job job = Job.getInstance(conf, "word count");
-        job.setJarByClass(WordCount.class);
+        job.setJarByClass(TaskB.class);
         job.setMapperClass(TokenizerMapper.class);
         job.setCombinerClass(IntSumReducer.class);
         job.setReducerClass(IntSumReducer.class);
+
+        job.setMapperClass(SortMapper.class);
+
         job.setOutputKeyClass(Text.class);
         job.setOutputValueClass(IntWritable.class);
         FileInputFormat.addInputPath(job, new Path(args[0]));
@@ -70,14 +102,18 @@ public class WordCount {
     public static void main(String[] args) throws Exception {
         Configuration conf = new Configuration();
         Job job = Job.getInstance(conf, "word count");
-        job.setJarByClass(WordCount.class);
+        job.setJarByClass(TaskB.class);
         job.setMapperClass(TokenizerMapper.class);
         job.setCombinerClass(IntSumReducer.class);
         job.setReducerClass(IntSumReducer.class);
+
+        job.setMapperClass(SortMapper.class);
+
         job.setOutputKeyClass(Text.class);
         job.setOutputValueClass(IntWritable.class);
-        FileInputFormat.addInputPath(job, new Path("/Users/nicoleburgess/CS/Grad Year/CS585/Project-0/data.txt"));
-        FileOutputFormat.setOutputPath(job, new Path("/Users/nicoleburgess/CS/Grad Year/CS585/Project-0/output1"));
+        FileInputFormat.addInputPath(job, new Path("TestaccessLogs.csv"));
+        //FileInputFormat.addInputPath(job, new Path("input/accessLogs.csv"));
+        FileOutputFormat.setOutputPath(job, new Path("TaskBOutput"));
         System.exit(job.waitForCompletion(true) ? 0 : 1);
     }
 }
