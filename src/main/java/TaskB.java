@@ -100,8 +100,9 @@ public class TaskB {
     }
 
     public static void main(String[] args) throws Exception {
+        //job1
         Configuration conf = new Configuration();
-        Job job = Job.getInstance(conf, "word count");
+        Job job = Job.getInstance(conf, "Page Access Count");
         job.setJarByClass(TaskB.class);
         job.setMapperClass(TokenizerMapper.class);
         job.setCombinerClass(IntSumReducer.class);
@@ -112,8 +113,39 @@ public class TaskB {
         job.setOutputKeyClass(Text.class);
         job.setOutputValueClass(IntWritable.class);
         FileInputFormat.addInputPath(job, new Path("TestaccessLogs.csv"));
-        //FileInputFormat.addInputPath(job, new Path("input/accessLogs.csv"));
         FileOutputFormat.setOutputPath(job, new Path("TaskBOutput"));
+        System.exit(job.waitForCompletion(true) ? 0 : 1);
+
+        //job 2
+        Configuration conf2 = new Configuration();
+        Job job2 = Job.getInstance(conf2, "sort and get max 10");
+        job2.setJarByClass(TaskB.class);
+        job2.setMapperClass(TokenizerMapper.class);
+        job2.setCombinerClass(IntSumReducer.class);
+        job2.setReducerClass(IntSumReducer.class);
+
+        job2.setMapperClass(SortMapper.class);
+
+        job2.setOutputKeyClass(Text.class);
+        job2.setOutputValueClass(IntWritable.class);
+        FileInputFormat.addInputPath(job2, new Path("TaskBOutput/part-r-00000"));
+        FileOutputFormat.setOutputPath(job2, new Path("TaskBJob2Output"));
+        System.exit(job.waitForCompletion(true) ? 0 : 1);
+
+        //job 2
+        Configuration conf3 = new Configuration();
+        Job job3 = Job.getInstance(conf3, "join");
+        job3.setJarByClass(TaskB.class);
+        job3.setMapperClass(TokenizerMapper.class);
+        job3.setCombinerClass(IntSumReducer.class);
+        job3.setReducerClass(IntSumReducer.class);
+
+        job3.setMapperClass(SortMapper.class);
+
+        job3.setOutputKeyClass(Text.class);
+        job3.setOutputValueClass(IntWritable.class);
+        FileInputFormat.addInputPath(job3, new Path("TaskBJob2Output/part-r-00000"));
+        FileOutputFormat.setOutputPath(job3, new Path("TaskBJob3Output"));
         System.exit(job.waitForCompletion(true) ? 0 : 1);
     }
 }
