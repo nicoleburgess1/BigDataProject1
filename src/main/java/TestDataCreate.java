@@ -121,7 +121,7 @@ public class TestDataCreate {
                 int byWho = rand.nextInt(100) + 1;
                 int whatPage = rand.nextInt(100) + 1;
                 String typeOfAccess = typeOfAccessList.get(rand.nextInt(numAccess));
-                int AccessTime = rand.nextInt(100) + 1;
+                int AccessTime = rand.nextInt(1000000) + 1;
                 if(byWho==whatPage)
                     if (byWho != 100)
                         whatPage = byWho + 1;
