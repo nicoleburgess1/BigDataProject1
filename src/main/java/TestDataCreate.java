@@ -89,7 +89,7 @@ public class TestDataCreate {
                         }
                     }
                     listOfAssociations.get(ID1-1).add(ID2);
-                    int DateOfRelation = rand.nextInt(50) + 1;
+                    int DateOfRelation = rand.nextInt(1000000) + 1;
                     String Desc = descList.get(rand.nextInt(descList.size()));
 
                     //writing it to csv and add to arraylist
@@ -177,7 +177,7 @@ public class TestDataCreate {
 
     public static void main(String[] args) {
         //createLinkBookPage();
-        //createAssociates();
-        createAccessLogs();
+        createAssociates();
+        //createAccessLogs();
     }
 }

@@ -10,12 +10,11 @@ import org.apache.hadoop.mapreduce.Reducer;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 
-//I'm like 60% sure this one is a map only task
 
 public class TaskC {
 
     public static class TokenizerMapper
-            extends Mapper<Object, Text, Text, IntWritable> {
+            extends Mapper<Object, Text, Text, Text> {
 
         private final static IntWritable one = new IntWritable(1);
         private Text word = new Text();
@@ -29,38 +28,22 @@ public class TaskC {
             for (int i = 0; i < columns.length; i++) {
                 columns[i] = datapoint[i].split(",");
             }
-
-
             for (String[] column : columns) {
-                word.set(column[4]);
-                context.write(word, one);
+                if(column[4].equals("BachelorsDegree")){
+                    word.set(column[1]);
+                    context.write(new Text(column[1]),new Text(column[2]) );
+                }
             }
         }
     }
 
-    public static class IntSumReducer
-            extends Reducer<Text, IntWritable, Text, IntWritable> {
-        private IntWritable result = new IntWritable();
 
-        public void reduce(Text key, Iterable<IntWritable> values,
-                           Context context
-        ) throws IOException, InterruptedException {
-            int sum = 0;
-            for (IntWritable val : values) {
-                sum += val.get();
-            }
-            result.set(sum);
-            context.write(key, result);
-        }
-    }
 
     public void debug(String[] args) throws Exception {
         Configuration conf = new Configuration();
         Job job = Job.getInstance(conf, "Education=BachelorsDegree");
         job.setJarByClass(TaskC.class);
         job.setMapperClass(TaskC.TokenizerMapper.class);
-        job.setCombinerClass(TaskC.IntSumReducer.class);
-        job.setReducerClass(TaskC.IntSumReducer.class);
         job.setOutputKeyClass(Text.class);
         job.setOutputValueClass(IntWritable.class);
         FileInputFormat.addInputPath(job, new Path(args[0]));
@@ -71,10 +54,9 @@ public class TaskC {
     public static void main(String[] args) throws Exception {
         Configuration conf = new Configuration();
         Job job = Job.getInstance(conf, "Education=BachelorsDegree");
-        job.setJarByClass(TaskA.class);
-        job.setMapperClass(TaskA.TokenizerMapper.class);
-        job.setCombinerClass(TaskA.IntSumReducer.class);
-        job.setReducerClass(TaskA.IntSumReducer.class);
+        job.setJarByClass(TaskC.class);
+        job.setMapperClass(TaskC.TokenizerMapper.class);
+        job.setNumReduceTasks(0);
         job.setOutputKeyClass(Text.class);
         job.setOutputValueClass(IntWritable.class);
         FileInputFormat.addInputPath(job, new Path("input/LinkBookPage.csv"));
