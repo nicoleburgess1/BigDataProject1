@@ -10,13 +10,15 @@ import org.apache.hadoop.mapreduce.Reducer;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 
-public class TaskA {
+//I'm like 60% sure this one is a map only task
+
+public class TaskC {
 
     public static class TokenizerMapper
-            extends Mapper<Object, Text, Text, IntWritable>{
+            extends Mapper<Object, Text, Text, IntWritable> {
 
         private final static IntWritable one = new IntWritable(1);
-        private Text Education = new Text();
+        private Text word = new Text();
 
         public void map(Object key, Text value, Context context
         ) throws IOException, InterruptedException {
@@ -24,20 +26,20 @@ public class TaskA {
             String dataset = value.toString();
             String[] datapoint = dataset.split("/n");
             String[][] columns = new String[datapoint.length][];
-            for(int i = 0; i < columns.length; i++){
+            for (int i = 0; i < columns.length; i++) {
                 columns[i] = datapoint[i].split(",");
             }
 
 
             for (String[] column : columns) {
-                Education.set(column[4]);
-                context.write(Education, one);
+                word.set(column[4]);
+                context.write(word, one);
             }
         }
     }
 
     public static class IntSumReducer
-            extends Reducer<Text,IntWritable,Text,IntWritable> {
+            extends Reducer<Text, IntWritable, Text, IntWritable> {
         private IntWritable result = new IntWritable();
 
         public void reduce(Text key, Iterable<IntWritable> values,
@@ -54,11 +56,11 @@ public class TaskA {
 
     public void debug(String[] args) throws Exception {
         Configuration conf = new Configuration();
-        Job job = Job.getInstance(conf, "Education Count");
-        job.setJarByClass(TaskA.class);
-        job.setMapperClass(TokenizerMapper.class);
-        job.setCombinerClass(IntSumReducer.class);
-        job.setReducerClass(IntSumReducer.class);
+        Job job = Job.getInstance(conf, "Education=BachelorsDegree");
+        job.setJarByClass(TaskC.class);
+        job.setMapperClass(TaskC.TokenizerMapper.class);
+        job.setCombinerClass(TaskC.IntSumReducer.class);
+        job.setReducerClass(TaskC.IntSumReducer.class);
         job.setOutputKeyClass(Text.class);
         job.setOutputValueClass(IntWritable.class);
         FileInputFormat.addInputPath(job, new Path(args[0]));
@@ -68,15 +70,15 @@ public class TaskA {
 
     public static void main(String[] args) throws Exception {
         Configuration conf = new Configuration();
-        Job job = Job.getInstance(conf, "Education Count");
+        Job job = Job.getInstance(conf, "Education=BachelorsDegree");
         job.setJarByClass(TaskA.class);
-        job.setMapperClass(TokenizerMapper.class);
-        job.setCombinerClass(IntSumReducer.class);
-        job.setReducerClass(IntSumReducer.class);
+        job.setMapperClass(TaskA.TokenizerMapper.class);
+        job.setCombinerClass(TaskA.IntSumReducer.class);
+        job.setReducerClass(TaskA.IntSumReducer.class);
         job.setOutputKeyClass(Text.class);
         job.setOutputValueClass(IntWritable.class);
         FileInputFormat.addInputPath(job, new Path("input/LinkBookPage.csv"));
-        FileOutputFormat.setOutputPath(job, new Path("TaskAOutput"));
+        FileOutputFormat.setOutputPath(job, new Path("TaskCOutput"));
         System.exit(job.waitForCompletion(true) ? 0 : 1);
     }
 }

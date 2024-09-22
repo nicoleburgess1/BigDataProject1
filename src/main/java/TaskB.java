@@ -132,7 +132,7 @@ public class TaskB {
         FileOutputFormat.setOutputPath(job2, new Path("TaskBJob2Output"));
         System.exit(job.waitForCompletion(true) ? 0 : 1);
 
-        //job 2
+        //job 3
         Configuration conf3 = new Configuration();
         Job job3 = Job.getInstance(conf3, "join");
         job3.setJarByClass(TaskB.class);
