@@ -62,7 +62,7 @@ public class TaskE {
         Job job = Job.getInstance(conf, "Access Count");
         job.setJarByClass(TaskE.class);
         job.setMapperClass(TaskE.TokenizerMapper.class);
-        //job.setCombinerClass(TaskE.IntSumReducer.class);
+        //job.setCombinerClass(TaskE.JoinReducer.class);
         job.setReducerClass(TaskE.IntSumReducer.class);
         job.setOutputKeyClass(Text.class);
         job.setOutputValueClass(IntWritable.class);

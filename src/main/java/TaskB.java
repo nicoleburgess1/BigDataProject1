@@ -7,6 +7,7 @@ import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.Reducer;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.input.KeyValueTextInputFormat;
+import org.apache.hadoop.mapreduce.lib.input.TextInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 
 import java.io.IOException;
@@ -57,13 +58,13 @@ public class TaskB {
 
 
     public static class SortMapper
-            extends Mapper<Text, Text, IntWritable, Text> {
+            extends Mapper<Text, IntWritable, IntWritable, Text> {
 
         private final static IntWritable keys = new IntWritable();
         private Text values = new Text();
 
 
-        public void map(Text key, Text value, Mapper.Context context
+        public void map(Text key, IntWritable value, Mapper.Context context
         ) throws IOException, InterruptedException {
             System.out.println(key);
             System.out.println(value);
@@ -141,9 +142,10 @@ public class TaskB {
         job.setOutputKeyClass(Text.class);
         job.setOutputValueClass(IntWritable.class);
         FileInputFormat.addInputPath(job, new Path("TestaccessLogs.csv"));
-        FileOutputFormat.setOutputPath(job, new Path("deleteme/TaskBOutput"));
+        FileOutputFormat.setOutputPath(job, new Path("deleteme\\TaskBOutput"));
         //System.exit(job.waitForCompletion(true) ? 0 : 1);
         job.waitForCompletion(true);
+
         //job 2
         Configuration conf2 = new Configuration();
         Job job2 = Job.getInstance(conf2, "sort and get max 10");
@@ -153,8 +155,8 @@ public class TaskB {
         job2.setReducerClass(SortReducer.class);
         job2.setOutputKeyClass(Text.class);
         job2.setOutputValueClass(IntWritable.class);
-        FileInputFormat.addInputPath(job2, new Path("deleteme/TaskBOutput"));
-        FileOutputFormat.setOutputPath(job2, new Path("deleteme/TaskBJob2Output"));
+        FileInputFormat.addInputPath(job2, new Path("deleteme\\TaskBOutput\\part-r-00000"));
+        FileOutputFormat.setOutputPath(job2, new Path("deleteme\\TaskBJob2Output"));
         /*
         job2.waitForCompletion(true);
         //System.exit(job.waitForCompletion(true) ? 0 : 1);
@@ -163,9 +165,9 @@ public class TaskB {
         Configuration conf3 = new Configuration();
         Job job3 = Job.getInstance(conf3, "join");
         job3.setJarByClass(TaskB.class);
-        job3.setMapperClass(TokenizerMapper.class);
-        job3.setCombinerClass(IntSumReducer.class);
-        job3.setReducerClass(IntSumReducer.class);
+        job3.setMapperClass(LinkedBookMapper.class);
+        job3.setCombinerClass(JoinReducer.class);
+        job3.setReducerClass(JoinReducer.class);
 
         job3.setMapperClass(SortMapper.class);
 

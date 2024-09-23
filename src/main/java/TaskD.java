@@ -11,7 +11,6 @@ import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.mapreduce.lib.input.MultipleInputs;
 import org.apache.hadoop.mapreduce.lib.input.TextInputFormat;
 
-
 import java.io.IOException;
 import java.util.ArrayList;
 
@@ -20,40 +19,31 @@ For each LinkBookPage, compute the “happiness factor” of its owner. That is,
 LinkBookPage, report the owner’s nickname, and the number of relationships they have.
 For page owners that aren't listed in Associates, return a score of zero. Please note that
 we maintain a symmetric relationship, take that into account in your calculations.
- */
+*/
 public class TaskD {
-    public static class TokenizerMapper
-            extends Mapper<Object, Text, Text, IntWritable> {
 
+    // Mapper for the first job: Counts associations for each ID
+    public static class TokenizerMapper extends Mapper<Object, Text, Text, IntWritable> {
         private final static IntWritable one = new IntWritable(1);
-        private Text Associates = new Text();
+        private Text id = new Text();
 
-        public void map(Object key, Text value, Context context
-        ) throws IOException, InterruptedException {
-            //StringTokenizer itr = new StringTokenizer(value.toString());
-            String dataset = value.toString();
-            String[] datapoint = dataset.split("/n");
-            String[][] columns = new String[datapoint.length][];
-            for(int i = 0; i < columns.length; i++){
-                columns[i] = datapoint[i].split(",");
-            }
+        public void map(Object key, Text value, Context context) throws IOException, InterruptedException {
+            String[] fields = value.toString().split(",");
+            if (fields.length >= 3) { // Ensures that there are at least two columns to process
+                id.set(fields[1].trim()); // First associated ID
+                context.write(id, one);
 
-            for (String[] column : columns) {
-                Associates.set(column[1]);
-                context.write(Associates, one);
-                Associates.set(column[2]);
-                context.write(Associates, one);
+                id.set(fields[2].trim()); // Second associated ID
+                context.write(id, one);
             }
         }
     }
 
-    public static class IntSumReducer
-            extends Reducer<Text,IntWritable,Text,IntWritable> {
+    // Reducer for the first job: Sums up the counts for each ID
+    public static class IntSumReducer extends Reducer<Text, IntWritable, Text, IntWritable> {
         private IntWritable result = new IntWritable();
 
-        public void reduce(Text key, Iterable<IntWritable> values,
-                           Context context
-        ) throws IOException, InterruptedException {
+        public void reduce(Text key, Iterable<IntWritable> values, Context context) throws IOException, InterruptedException {
             int sum = 0;
             for (IntWritable val : values) {
                 sum += val.get();
@@ -63,124 +53,124 @@ public class TaskD {
         }
     }
 
+    // Mapper for LinkBookPage dataset in the second job
     public static class LinkBookPageJoinMapper extends Mapper<LongWritable, Text, Text, Text> {
-
-        private Text outkey = new Text();
-        private Text outvalue = new Text();
+        private Text outKey = new Text();
+        private Text outValue = new Text();
 
         public void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
-            // get a line of input from linkbookpage.csv
-            String line = value.toString();
-            String[] split = line.split(" ");
-            // The foreign join key is the ID
-            outkey.set(split[0]);
-            // Flag this record for the reducer and then output
-            outvalue.set("L" + split[1]);
-            context.write(outkey, outvalue);
+            String[] fields = value.toString().split(",");
+            if (fields.length >= 2) {
+                outKey.set(fields[0].trim()); // Use ID as the key
+                outValue.set("L" + fields[1].trim()); // Prefix "L" to indicate LinkBookPage
+                System.out.println("LinkBookPage Mapper: " + outKey.toString() + " -> " + outValue.toString());
+                context.write(outKey, outValue);
+            } else {
+                System.err.println("LinkBookPage Mapper Error: Invalid input line - " + value.toString());
+            }
         }
     }
 
+    // Mapper for the first job's output in the second job
     public static class AssociatesJoinMapper extends Mapper<LongWritable, Text, Text, Text> {
-
-        private Text outkey = new Text();
-        private Text outvalue = new Text();
+        private Text outKey = new Text();
+        private Text outValue = new Text();
 
         public void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
-            // get a line of input from job1output
-            String line = value.toString();
-            String[] split = line.split(" ");
-            // The foreign join key is the ID
-            outkey.set(split[0]);
-            // Flag this record for the reducer and then output
-            outvalue.set("A" + split[1]);
-            context.write(outkey, outvalue);
+            String[] fields = value.toString().split("\t"); // Split using tab, as this is the default output format
+            if (fields.length == 2) {
+                outKey.set(fields[0].trim()); // Use ID as the key
+                outValue.set("A" + fields[1].trim()); // Prefix "A" to indicate Associates count
+                System.out.println("Associates Mapper: " + outKey.toString() + " -> " + outValue.toString());
+                context.write(outKey, outValue);
+
+            } else {
+                System.err.println("Associates Mapper Error: Invalid input line - " + value.toString());
+            }
         }
     }
 
-    public static class JoinReducer extends Reducer<Text, Text, Text, Text> {
-
+    // Reducer for the second job: Joins the data from LinkBookPage and Associates counts
+    public static class JoinReducer extends Reducer<Text, Text, Text, IntWritable> {
         private ArrayList<String> linkbookpages = new ArrayList<>();
         private ArrayList<String> associates = new ArrayList<>();
+        private IntWritable outputValue = new IntWritable();
 
         public void reduce(Text key, Iterable<Text> values, Context context) throws IOException, InterruptedException {
-
-            // clear list
-
+            // Clear lists for new key
             linkbookpages.clear();
             associates.clear();
 
-            // bin each record from both mapper based on the tag letter "L" or "A". Then, remove the tag.
+            System.out.println("Reducer Key: " + key.toString());
 
-            for(Text vals: values){
-                if (vals.charAt(0) == 'L') {
-                    linkbookpages.add(vals.toString().substring(1));
-                } else if (vals.charAt(0) == 'A') {
-                    associates.add(vals.toString().substring(1));
+            // Separate LinkBookPage and Associates data
+            for (Text val : values) {
+                String value = val.toString();
+                if (value.startsWith("L")) {
+                    linkbookpages.add(value.substring(1)); // Remove "L" prefix
+                    System.out.println("Reducer LinkBookPage Value: " + value.substring(1));
+                } else if (value.startsWith("A")) {
+                    associates.add(value.substring(1)); // Remove "A" prefix
+                    System.out.println("Reducer Associates Value: " + value.substring(1));
+                } else {
+                    System.err.println("Reducer Error: Invalid value - " + value.toString());
                 }
             }
-            // execute the join logic after both source lists are filled after iterating all values
-            executeJoinLogic(context);
-        }
 
-        private void executeJoinLogic(Context context) throws IOException, InterruptedException {
-            if (!linkbookpages.isEmpty() && !associates.isEmpty()) {
-                for (String L : linkbookpages) {
-                    boolean hasAssociates = false;
-                    String[] splitLink = L.split(" ");
-                    for (String A : associates) {
-                        String[] splitAssociate = A.split(" ");
-                        if(splitLink[0].equals(splitAssociate[0])) {
-                            context.write(new Text(splitLink[1]), new Text(splitAssociate[1]));
-                            hasAssociates = true;
-                        }
-                    }
-                    if (!hasAssociates) {
-                        context.write(new Text(splitLink[1]), new Text("0"));
+            // JoinReducer logic: For each linkbookpage name, associate it with the count or zero
+            for (String name : linkbookpages) {
+                if (associates.isEmpty()) {
+                    // No associations found, output "name, 0"
+                    outputValue.set(0);
+                    context.write(new Text(name), outputValue);
+                    System.out.println("Reducer Output: " + name + " -> 0");
+                } else {
+                    // Associations found, output "name, count"
+                    for (String count : associates) {
+                        outputValue.set(Integer.parseInt(count));
+                        context.write(new Text(name), outputValue);
+                        System.out.println("Reducer Output: " + name + " -> " + count);
                     }
                 }
-
             }
         }
-    }
-
-    public void debug(String[] args) throws Exception {
-        Configuration conf = new Configuration();
-        Job job = Job.getInstance(conf, "Associates count");
-        job.setJarByClass(TaskD.class);
-        job.setMapperClass(TaskD.TokenizerMapper.class);
-        job.setCombinerClass(TaskD.IntSumReducer.class);
-        job.setReducerClass(TaskD.IntSumReducer.class);
-        job.setOutputKeyClass(Text.class);
-        job.setOutputValueClass(IntWritable.class);
-        FileInputFormat.addInputPath(job, new Path(args[0]));
-        FileOutputFormat.setOutputPath(job, new Path(args[1]));
-        System.exit(job.waitForCompletion(true) ? 0 : 1);
     }
 
     public static void main(String[] args) throws Exception {
-        Configuration conf = new Configuration();
-        Job job = Job.getInstance(conf, "Associates Count");
-        job.setJarByClass(TaskD.class);
-        job.setMapperClass(TaskD.TokenizerMapper.class);
-        job.setCombinerClass(TaskD.IntSumReducer.class);
-        job.setReducerClass(TaskD.IntSumReducer.class);
-        job.setOutputKeyClass(Text.class);
-        job.setOutputValueClass(IntWritable.class);
-        FileInputFormat.addInputPath(job, new Path("TestAssociates.csv"));
-        FileOutputFormat.setOutputPath(job, new Path("TaskDOutput"));
-        job.waitForCompletion(true);
+        // First MapReduce Job Configuration
+        Configuration conf1 = new Configuration();
+        Job job1 = Job.getInstance(conf1, "Associates Count");
+        job1.setJarByClass(TaskD.class);
+        job1.setMapperClass(TokenizerMapper.class);
 
+//        job1.setMapOutputKeyClass(Text.class);
+//        job1.setMapOutputValueClass(IntWritable.class);
+
+//        job1.setCombinerClass(JoinReducer.class);
+        job1.setReducerClass(IntSumReducer.class);
+        job1.setOutputKeyClass(Text.class);
+        job1.setOutputValueClass(IntWritable.class);
+        FileInputFormat.addInputPath(job1, new Path("TestAssociates.csv"));
+        FileOutputFormat.setOutputPath(job1, new Path("TaskDOutput"));
+        job1.waitForCompletion(true);
+
+        // Second MapReduce Job Configuration
         Configuration conf2 = new Configuration();
-        Job job2 = Job.getInstance(conf2, "Join");
+        Job job2 = Job.getInstance(conf2, "JoinReducer LinkBookPage and Associates");
         job2.setJarByClass(TaskD.class);
-        //job2.setMapperClass(TaskD.LinkBookPageJoinMapper.class);
-        //job2.setMapperClass(TaskD.AssociatesJoinMapper.class);
-        MultipleInputs.addInputPath(job2, new Path("TestLinkBookPages.csv"), TextInputFormat.class, TaskD.LinkBookPageJoinMapper.class);
-        MultipleInputs.addInputPath(job2, new Path("TaskDOutput"), TextInputFormat.class, TaskD.AssociatesJoinMapper.class);
-        job2.setReducerClass(TaskD.JoinReducer.class);
+
+        // Adding Multiple Inputs
+        MultipleInputs.addInputPath(job2, new Path("TestLinkBookPage.csv"),
+                TextInputFormat.class, LinkBookPageJoinMapper.class);
+        MultipleInputs.addInputPath(job2, new Path("TaskDOutput\\part-r-00000"),
+                TextInputFormat.class, AssociatesJoinMapper.class);
+
+        job2.setMapOutputKeyClass(Text.class);
+        job2.setMapOutputValueClass(Text.class);
+
+        job2.setReducerClass(JoinReducer.class);
         job2.setOutputKeyClass(Text.class);
-        job2.setOutputValueClass(Text.class);
-        //FileInputFormat.addInputPaths(job2, new Path("TestLinkBookPages.csv") + "," + new Path("TaskDOutput"));
+        job2.setOutputValueClass(IntWritable.class);
         FileOutputFormat.setOutputPath(job2, new Path("TaskDJoinOutput"));
         System.exit(job2.waitForCompletion(true) ? 0 : 1);
     }
