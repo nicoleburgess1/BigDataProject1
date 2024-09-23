@@ -67,7 +67,7 @@ public class TaskG {
             for (String[] column : columns) {
                 System.out.println(3);
                 ID.set(column[0]);
-                Nickname.set("L" + column[1]);
+                Nickname.set("L" + column[0] + " " + column[1]);
                 System.out.println(Nickname.toString());
                 context.write(ID, Nickname);
             }
@@ -110,8 +110,11 @@ public class TaskG {
             for (String name : linkbookpages) {
                 if (accessLog.isEmpty()) {
                     // No associations found, output "name, 0"
-                    outputValue.set(0);
-                    context.write(new Text(name), outputValue);
+                    String[] nameID = name.split(" ");
+                    Text Name = new Text();
+                    Name.set(nameID[1]);
+                    IntWritable ID = new IntWritable(Integer.parseInt(nameID[0]));
+                    context.write(Name, ID);
                     System.out.println("Reducer Output: " + name + " -> 0");
                 } else {
                     // Associations found, output "name, count"
@@ -140,9 +143,9 @@ public class TaskG {
 
 
             //FileInputFormat.addInputPath(job, new Path("TestaccessLogs.csv"));
-            MultipleInputs.addInputPath(job, new Path("input\\accessLogs.csv"),
+            MultipleInputs.addInputPath(job, new Path("testAccessLogs.csv"),
                     TextInputFormat.class, TaskG.LessThan90DaysMapper.class);
-            MultipleInputs.addInputPath(job, new Path("input\\LinkBookPage.csv"),
+            MultipleInputs.addInputPath(job, new Path("testLinkBookPage.csv"),
                     TextInputFormat.class, TaskG.LinkedBookMapper.class);
             FileOutputFormat.setOutputPath(job, new Path("TaskGOutput"));
             System.exit(job.waitForCompletion(true) ? 0 : 1);

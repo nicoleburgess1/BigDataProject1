@@ -150,7 +150,7 @@ public class TaskD {
         job1.setReducerClass(IntSumReducer.class);
         job1.setOutputKeyClass(Text.class);
         job1.setOutputValueClass(IntWritable.class);
-        FileInputFormat.addInputPath(job1, new Path("TestAssociates.csv"));
+        FileInputFormat.addInputPath(job1, new Path("input/Associates.csv"));
         FileOutputFormat.setOutputPath(job1, new Path("TaskDOutput"));
         job1.waitForCompletion(true);
 
@@ -160,9 +160,9 @@ public class TaskD {
         job2.setJarByClass(TaskD.class);
 
         // Adding Multiple Inputs
-        MultipleInputs.addInputPath(job2, new Path("TestLinkBookPage.csv"),
+        MultipleInputs.addInputPath(job2, new Path("input/LinkBookPage.csv"),
                 TextInputFormat.class, LinkBookPageJoinMapper.class);
-        MultipleInputs.addInputPath(job2, new Path("TaskDOutput\\part-r-00000"),
+        MultipleInputs.addInputPath(job2, new Path("TaskDOutput/part-r-00000"),
                 TextInputFormat.class, AssociatesJoinMapper.class);
 
         job2.setMapOutputKeyClass(Text.class);

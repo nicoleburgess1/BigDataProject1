@@ -6,17 +6,21 @@ import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.Reducer;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
+import org.apache.hadoop.mapreduce.lib.input.MultipleInputs;
+import org.apache.hadoop.mapreduce.lib.input.TextInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 
 import java.io.IOException;
+import java.util.ArrayList;
 
 /*Report all owners of a LinkBookPage who are more popular than an average user,
 namely, those who have more relationships than the average number of relationships
 across all owners LinkBookPages.*/
 public class TaskF {
 
-    public static int average;
+    public static int average=0;
     public static int total = 0;
+    public static int totalCount = 0;
     public static class TokenizerMapper
             extends Mapper<Object, Text, Text, IntWritable> {
 
@@ -32,7 +36,6 @@ public class TaskF {
             for(int i = 0; i < columns.length; i++){
                 columns[i] = datapoint[i].split(",");
             }
-
 
             for (String[] column : columns) {
                 Associates.set(column[1]);
@@ -51,30 +54,47 @@ public class TaskF {
                            Context context
         ) throws IOException, InterruptedException {
             int sum = 0;
+            int count = 1;
             for (IntWritable val : values) {
                 sum += val.get();
             }
-            total+=sum;
-            average = total/100;
-            System.out.println("average is "+average);
+            totalCount += count;
+            System.out.println("Sum" + sum);
+            total += sum;
+            System.out.println("Total" + total);
             result.set(sum);
+
+            //Figure out how to get average
             context.write(key, result);
+        }
+
+        @Override
+        protected void cleanup(Reducer<Text, IntWritable, Text, IntWritable>.Context context) throws IOException, InterruptedException {
+            super.cleanup(context);
+
+            average = total/totalCount;
+            System.out.println("average " + average);
         }
     }
 
-    public void debug(String[] args) throws Exception {
-        Configuration conf = new Configuration();
-        Job job = Job.getInstance(conf, "Education Count");
-        job.setJarByClass(TaskA.class);
-        job.setMapperClass(TaskA.TokenizerMapper.class);
-        job.setCombinerClass(TaskA.IntSumReducer.class);
-        job.setReducerClass(TaskA.IntSumReducer.class);
-        job.setOutputKeyClass(Text.class);
-        job.setOutputValueClass(IntWritable.class);
-        FileInputFormat.addInputPath(job, new Path(args[0]));
-        FileOutputFormat.setOutputPath(job, new Path(args[1]));
-        System.exit(job.waitForCompletion(true) ? 0 : 1);
+    public static class AverageReducer
+            extends Reducer<Text,IntWritable,Text,IntWritable> {
+        private IntWritable result = new IntWritable();
+
+        public void reduce(Text key, Iterable<IntWritable> values,
+                           Context context
+        ) throws IOException, InterruptedException {
+
+            for (IntWritable val : values) {
+                if (val.get() > average) {
+                    result.set(val.get());
+                    context.write(key, result);
+                }
+            }
+
+        }
     }
+
 
     public static void main(String[] args) throws Exception {
         Configuration conf = new Configuration();
@@ -82,10 +102,15 @@ public class TaskF {
         job.setJarByClass(TaskF.class);
         job.setMapperClass(TaskF.TokenizerMapper.class);
         job.setCombinerClass(TaskF.IntSumReducer.class);
-        job.setReducerClass(TaskF.IntSumReducer.class);
+        job.setReducerClass(TaskF.AverageReducer.class);
+        //job.setNumReduceTasks(0);
         job.setOutputKeyClass(Text.class);
         job.setOutputValueClass(IntWritable.class);
-        FileInputFormat.addInputPath(job, new Path("TestAssociates.csv"));
+        //FileInputFormat.addInputPath(job, new Path("input/Associates.csv"));
+        MultipleInputs.addInputPath(job, new Path("input/Associates.csv"),
+                TextInputFormat.class, TaskF.TokenizerMapper.class);
+        //MultipleInputs.addInputPath(job, new Path("input/LinkBookPage.csv"),
+        //        TextInputFormat.class, TaskF..class);
         FileOutputFormat.setOutputPath(job, new Path("TaskFOutput"));
         System.exit(job.waitForCompletion(true) ? 0 : 1);
     }
