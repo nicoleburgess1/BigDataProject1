@@ -117,7 +117,7 @@ public class TaskD {
                 }
             }
 
-            // JoinReducer logic: For each linkbookpage name, associate it with the count or zero
+            // AccessReducer logic: For each linkbookpage name, associate it with the count or zero
             for (String name : linkbookpages) {
                 if (associates.isEmpty()) {
                     // No associations found, output "name, 0"
@@ -146,7 +146,7 @@ public class TaskD {
 //        job1.setMapOutputKeyClass(Text.class);
 //        job1.setMapOutputValueClass(IntWritable.class);
 
-//        job1.setCombinerClass(JoinReducer.class);
+//        job1.setCombinerClass(AccessReducer.class);
         job1.setReducerClass(IntSumReducer.class);
         job1.setOutputKeyClass(Text.class);
         job1.setOutputValueClass(IntWritable.class);
@@ -156,7 +156,7 @@ public class TaskD {
 
         // Second MapReduce Job Configuration
         Configuration conf2 = new Configuration();
-        Job job2 = Job.getInstance(conf2, "JoinReducer LinkBookPage and Associates");
+        Job job2 = Job.getInstance(conf2, "AccessReducer LinkBookPage and Associates");
         job2.setJarByClass(TaskD.class);
 
         // Adding Multiple Inputs
