@@ -166,8 +166,8 @@ public class TaskB {
         Job job3 = Job.getInstance(conf3, "join");
         job3.setJarByClass(TaskB.class);
         job3.setMapperClass(LinkedBookMapper.class);
-        job3.setCombinerClass(JoinReducer.class);
-        job3.setReducerClass(JoinReducer.class);
+        job3.setCombinerClass(AccessReducer.class);
+        job3.setReducerClass(AccessReducer.class);
 
         job3.setMapperClass(SortMapper.class);
 

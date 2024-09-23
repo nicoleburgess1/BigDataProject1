@@ -6,6 +6,7 @@ identifier of each LinkBookPage owner, you don’t have to report name. IDs are 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IntWritable;
+import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.Mapper;
@@ -15,19 +16,21 @@ import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashSet;
 
 public class TaskE {
     public static class TokenizerMapper
-            extends Mapper<Object, Text, Text, IntWritable> {
+            extends Mapper<Object, Text, IntWritable, IntWritable> {
 
         private final static IntWritable one = new IntWritable(1);
-        private Text Access = new Text();
+        private IntWritable accessID = new IntWritable();
+        private IntWritable accessedID = new IntWritable();
 
         public void map(Object key, Text value, Context context
         ) throws IOException, InterruptedException {
             //StringTokenizer itr = new StringTokenizer(value.toString());
             String dataset = value.toString();
-            String[] datapoint = dataset.split("/n");
+            String[] datapoint = dataset.split("\n");
             String[][] columns = new String[datapoint.length][];
             for(int i = 0; i < columns.length; i++){
                 columns[i] = datapoint[i].split(",");
@@ -35,38 +38,46 @@ public class TaskE {
 
 
             for (String[] column : columns) {
-                Access.set(column[1] + " " + column[2]);
-                context.write(Access, one);
+                accessID.set(Integer.parseInt(column[1]));
+                accessedID.set(Integer.parseInt(column[2]));
+                context.write(accessID, accessedID);
             }
         }
     }
 
     public static class IntSumReducer
-            extends Reducer<Text,IntWritable,Text,IntWritable> {
-        private IntWritable result = new IntWritable();
+            extends Reducer<IntWritable,IntWritable,IntWritable,Text> {
+        private Text result = new Text();
 
-        public void reduce(Text key, Iterable<IntWritable> values,
+        public void reduce(IntWritable key, Iterable<IntWritable> values,
                            Context context
         ) throws IOException, InterruptedException {
-            int sum = 0;
+            int accesses = 0;
+            ArrayList<Integer> distinct = new ArrayList<>();
+
             for (IntWritable val : values) {
-                sum += val.get();
+                accesses +=1;
+                int accessID = val.get();
+
+                if(!distinct.contains(accessID)){
+                    distinct.add(accessID);
+                }
             }
-            result.set(sum);
+            result.set(accesses + "\t" + distinct.size());
             context.write(key, result);
+
         }
     }
 
     public static void main(String[] args) throws Exception {
         Configuration conf = new Configuration();
-        Job job = Job.getInstance(conf, "Access Count");
+        Job job = Job.getInstance(conf, "access Count");
         job.setJarByClass(TaskE.class);
         job.setMapperClass(TaskE.TokenizerMapper.class);
-        //job.setCombinerClass(TaskE.JoinReducer.class);
         job.setReducerClass(TaskE.IntSumReducer.class);
-        job.setOutputKeyClass(Text.class);
+        job.setOutputKeyClass(IntWritable.class);
         job.setOutputValueClass(IntWritable.class);
-        FileInputFormat.addInputPath(job, new Path("Testaccesslogs.csv"));
+        FileInputFormat.addInputPath(job, new Path("input/accesslogs.csv"));
         FileOutputFormat.setOutputPath(job, new Path("TaskEOutput"));
         System.exit(job.waitForCompletion(true) ? 0 : 1);
     }
