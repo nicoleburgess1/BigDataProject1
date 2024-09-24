@@ -6,7 +6,6 @@ identifier of each LinkBookPage owner, you don’t have to report name. IDs are 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IntWritable;
-import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.Mapper;
@@ -16,7 +15,6 @@ import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashSet;
 
 public class TaskE {
     public static class TokenizerMapper
@@ -36,7 +34,6 @@ public class TaskE {
                 columns[i] = datapoint[i].split(",");
             }
 
-
             for (String[] column : columns) {
                 accessID.set(Integer.parseInt(column[1]));
                 accessedID.set(Integer.parseInt(column[2]));
@@ -52,19 +49,18 @@ public class TaskE {
         public void reduce(IntWritable key, Iterable<IntWritable> values,
                            Context context
         ) throws IOException, InterruptedException {
-            int accesses = 0;
+            int accesses = 0; //sets num accesses for key to 0
             ArrayList<Integer> distinct = new ArrayList<>();
-
             for (IntWritable val : values) {
-                accesses +=1;
-                int accessID = val.get();
+                accesses +=1; //total num of accesses/key increases
+                int accessID = val.get(); //the ID accessed by key
 
                 if(!distinct.contains(accessID)){
-                    distinct.add(accessID);
+                    distinct.add(accessID); //adds to the list if key hasn't already accessed that ID
                 }
             }
             result.set(accesses + "\t" + distinct.size());
-            context.write(key, result);
+            context.write(key, result); //ID, total accesses, total num distinct access
 
         }
     }
