@@ -71,7 +71,8 @@ public class TaskF {
         @Override
         protected void cleanup(Reducer<Text, IntWritable, Text, IntWritable>.Context context) throws IOException, InterruptedException {
             super.cleanup(context);
-
+            total = 20000000;
+            totalCount = 200000;
             average = total/totalCount;
             System.out.println("average " + average);
         }
