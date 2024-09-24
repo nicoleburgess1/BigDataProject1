@@ -2,7 +2,7 @@
 2,1,36,249629,MiddleSchoolFriend
 3,1,16,697364,OnlineFriend
 4,1,60,766138,Coworker
-5,1,79,43820,Cousin
+5,1,71,43820,Cousin
 6,2,15,975146,Lover
 7,2,65,875672,HobbyFriend
 8,2,17,394937,Father
@@ -60,9 +60,9 @@
 60,12,13,833862,MetOnceAndWillNeverSeeAgain
 61,13,34,288281,HighSchoolFriend
 62,13,66,506281,Uncle
-63,13,70,205966,Lover
+63,13,1,205966,Lover
 64,13,10,856240,Neighbor
-65,13,82,575151,SportsFriend
+65,13,1,575151,SportsFriend
 66,14,18,83866,HobbyFriend
 67,14,3,75421,CollegeFriend
 68,14,42,956385,FamilyFriend
@@ -118,7 +118,7 @@
 118,24,74,961619,Child
 119,24,41,185288,Classmate
 120,24,64,698430,Neighbor
-121,25,43,869331,Classmate
+121,25,41,869331,Classmate
 122,25,62,981457,MiddleSchoolFriend
 123,25,75,622573,FriendOfAFriend
 124,25,37,703526,Neighbor
@@ -356,7 +356,7 @@
 356,72,35,209546,Colleague
 357,72,100,522717,Child
 358,72,73,248127,FriendOfAFriend
-359,72,60,340918,Uncle
+359,72,13,340918,Uncle
 360,72,24,358856,HighSchoolFriend
 361,73,83,50387,Mother
 362,73,12,227890,FriendOfAFriend
