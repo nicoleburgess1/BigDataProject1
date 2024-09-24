@@ -142,11 +142,6 @@ public class TaskD {
         Job job1 = Job.getInstance(conf1, "Associates Count");
         job1.setJarByClass(TaskD.class);
         job1.setMapperClass(TokenizerMapper.class);
-
-//        job1.setMapOutputKeyClass(Text.class);
-//        job1.setMapOutputValueClass(IntWritable.class);
-
-//        job1.setCombinerClass(AccessReducer.class);
         job1.setReducerClass(IntSumReducer.class);
         job1.setOutputKeyClass(Text.class);
         job1.setOutputValueClass(IntWritable.class);
